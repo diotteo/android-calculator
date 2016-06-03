@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 	}
 
 
-	public void getResult(View v) {
+	public void displayResult(View v) {
 		mResultView.append("\n" + mInputView.getText());
 	}
 }
