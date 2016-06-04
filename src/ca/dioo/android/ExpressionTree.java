@@ -103,11 +103,22 @@ public class ExpressionTree {
 				if (pn.getType() == NodeType.LEFT_PAREN) {
 					Token child;
 					if (tree.mCurNode instanceof Node) {
-						child = ((Node) tree.mCurNode).getRight();
+						Node n = (Node) tree.mCurNode;
+						child = n.getRight();
 						boolean isNegative = pn.isNegative();
 						pn = new PrivNode(null, pn.getType(), child);
 						pn.setNegative(isNegative);
-						((Node) tree.mCurNode).setRight(pn);
+
+						if (n.getType() == null) {
+							if (n.getParent() == null) {
+								tree.mRootNode = pn;
+							} else {
+								throw new Error("?!?");
+							}
+							pn.setParent(n.getParent());
+						} else {
+							n.setRight(pn);
+						}
 					} else {
 						child = ((PrivNode) tree.mCurNode).getChild();
 						pn = new PrivNode(null, pn.getType(), child);
