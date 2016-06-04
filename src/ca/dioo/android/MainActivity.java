@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
 
 
 	public void displayResult(View v) {
-		mResultView.append("\n" + mInputView.getText());
+		String expr = mInputView.getText().toString();
+		mResultView.append("\n" + expr + " = " + ExpressionTree.getResultFromExpr(expr));
 	}
 }
