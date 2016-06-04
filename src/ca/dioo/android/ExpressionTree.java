@@ -27,61 +27,71 @@ public class ExpressionTree {
 	}
 
 
-	public void buildTree(List<Token> tokList) {
+	public static Number getResultFromExpr(String expr) {
+		List<Token> tokList = parse(expr);
+		tokList = compressList(tokList);
+		ExpressionTree tree = buildTree(tokList);
+		return tree.getResult();
+	}
+
+
+	public static ExpressionTree buildTree(List<Token> tokList) {
+		ExpressionTree tree = new ExpressionTree();
+
 		for (Token tok: tokList) {
 			if (tok instanceof Value) {
 				if (DEBUG) {
 					System.out.println("Value:" + ((Value) tok).getVal());
 				}
-				mCurNode.setValue((Value) tok);
+				tree.mCurNode.setValue((Value) tok);
 			} else if (tok instanceof Node) {
 				Node n = (Node) tok;
 				if (DEBUG) {
 					System.out.println("Node:" + n.getType());
 				}
-				if (mCurNode instanceof PrivNode) {
-					if (!((PrivNode) mCurNode).isClosed()) {
-						PrivNode pn = (PrivNode) mCurNode;
-						Token child = ((PrivNode) mCurNode).getChild();
-						mCurNode = new Node(mCurNode, child, null, null);
-						pn.setChild(mCurNode);
+				if (tree.mCurNode instanceof PrivNode) {
+					if (!((PrivNode) tree.mCurNode).isClosed()) {
+						PrivNode pn = (PrivNode) tree.mCurNode;
+						Token child = ((PrivNode) tree.mCurNode).getChild();
+						tree.mCurNode = new Node(tree.mCurNode, child, null, null);
+						pn.setChild(tree.mCurNode);
 					}
 				}
 
-				if (mCurNode.getType() == null) {
-					mCurNode.setType(n.getType());
-				} else if (mCurNode instanceof Node && ((Node) mCurNode).getRight() == null) {
+				if (tree.mCurNode.getType() == null) {
+					tree.mCurNode.setType(n.getType());
+				} else if (tree.mCurNode instanceof Node && ((Node) tree.mCurNode).getRight() == null) {
 					throw new Error("Two consecutive Nodes in token list?");
 
 				//n has higher priority to curNode. Insert above right leaf
-				} else if (NodeBase.compare(mCurNode.getType(), n.getType()) > 0) {
+				} else if (NodeBase.compare(tree.mCurNode.getType(), n.getType()) > 0) {
 					n = new Node(n.getType());
-					((Node) mCurNode).insertRight(n);
-					mCurNode = n;
+					((Node) tree.mCurNode).insertRight(n);
+					tree.mCurNode = n;
 
 				//n has equal or lower priority to curNode. Insert as parent
 				//FIXME: need to keep going up until a missing right leaf is found
 				} else {
-					NodeBase nb = mCurNode.getParent();
+					NodeBase nb = tree.mCurNode.getParent();
 					while (nb != null
 							&& nb.getType() != NodeType.LEFT_PAREN
 							&& NodeBase.compare(nb.getType(), n.getType()) <= 0) {
-						mCurNode = nb;
+						tree.mCurNode = nb;
 						nb = nb.getParent();
 					}
 					NodeBase parent = nb;
 					n = new Node(n.getType());
-					NodeBase child = mCurNode;
+					NodeBase child = tree.mCurNode;
 					n.setLeft(child);
 					n.setParent(parent);
-					mCurNode = n;
+					tree.mCurNode = n;
 
 					if (parent == null) {
-						mRootNode = mCurNode;
+						tree.mRootNode = tree.mCurNode;
 					} else if (parent instanceof PrivNode) {
-						((PrivNode) parent).setChild(mCurNode);
+						((PrivNode) parent).setChild(tree.mCurNode);
 					} else {
-						((Node) parent).setRight(mCurNode);
+						((Node) parent).setRight(tree.mCurNode);
 					}
 				}
 			} else if (tok instanceof PrivNode) {
@@ -92,31 +102,31 @@ public class ExpressionTree {
 
 				if (pn.getType() == NodeType.LEFT_PAREN) {
 					Token child;
-					if (mCurNode instanceof Node) {
-						child = ((Node) mCurNode).getRight();
+					if (tree.mCurNode instanceof Node) {
+						child = ((Node) tree.mCurNode).getRight();
 						pn = new PrivNode(null, pn.getType(), child);
-						((Node) mCurNode).setRight(pn);
+						((Node) tree.mCurNode).setRight(pn);
 					} else {
-						child = ((PrivNode) mCurNode).getChild();
+						child = ((PrivNode) tree.mCurNode).getChild();
 						pn = new PrivNode(null, pn.getType(), child);
-						((PrivNode) mCurNode).setChild(pn);
+						((PrivNode) tree.mCurNode).setChild(pn);
 					}
-					mCurNode = pn;
+					tree.mCurNode = pn;
 
 				} else if (pn.getType() == NodeType.RIGHT_PAREN) {
-					if (mCurNode instanceof Node && ((Node) mCurNode).getRight() == null) {
-						if (mCurNode.getType() != null) {
+					if (tree.mCurNode instanceof Node && ((Node) tree.mCurNode).getRight() == null) {
+						if (tree.mCurNode.getType() != null) {
 							throw new Error("Bogus closing parenthesis (follows value)");
-						} else if (mCurNode.getParent() instanceof PrivNode) {
-							Node n = (Node) mCurNode;
-							mCurNode = n.getParent();
+						} else if (tree.mCurNode.getParent() instanceof PrivNode) {
+							Node n = (Node) tree.mCurNode;
+							tree.mCurNode = n.getParent();
 							((PrivNode) n.getParent()).setChild(n.getLeft());
 						} else {
 							throw new Error("?!?");
 						}
 					}
 
-					NodeBase nb = mCurNode;
+					NodeBase nb = tree.mCurNode;
 					boolean found = false;
 					while (!(nb instanceof PrivNode)) {
 						if (nb.getParent() == null) {
@@ -126,10 +136,11 @@ public class ExpressionTree {
 						}
 					}
 					((PrivNode) nb).close();
-					mCurNode = nb;
+					tree.mCurNode = nb;
 				}
 			}
 		}
+		return tree;
 	}
 
 
