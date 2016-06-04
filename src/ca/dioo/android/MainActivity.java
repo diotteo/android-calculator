@@ -1,4 +1,4 @@
-package ca.dioo.android;
+package ca.dioo.android.dioo_calc;
 
 import android.app.Activity;
 import android.os.Bundle;

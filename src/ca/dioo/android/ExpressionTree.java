@@ -1,3 +1,5 @@
+package ca.dioo.android.dioo_calc;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.ArrayList;
