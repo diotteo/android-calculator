@@ -195,7 +195,7 @@ public class ExpressionTree {
 		}
 	}
 
-	private boolean hasFloat(Number left, Number right) {
+	private static boolean hasFloat(Number left, Number right) {
 		return (left instanceof Float
 				|| left instanceof Double
 				|| right instanceof Float
@@ -548,6 +548,8 @@ public class ExpressionTree {
 							i = tokStart - 1;
 
 							tokList.add(new Value(val));
+						} else if (Character.isWhitespace(cp)) {
+							tokStart = i + 1;
 						} else {
 							throw new Error("Unknown token at index " + tokStart + ": " + sub);
 						}
