@@ -9,6 +9,7 @@ public class Test {
 		if (true) {
 			exprList = Arrays.asList(
 					//"-20..+30**(45.2+*.5E-2)-36",
+					"-+-(-2)",
 					"2**(2)",
 					"200.+2",
 					"1+2*3+5/4",
