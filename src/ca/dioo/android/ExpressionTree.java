@@ -18,7 +18,7 @@ public class ExpressionTree {
 
 	static {
 		FLOAT_NB_PAT = Pattern.compile("(\\+|-)?(\\d+\\.\\d*)|(\\d*\\.\\d+)((E|e)(\\+|-)?\\d+)?");
-		INT_NB_PAT = Pattern.compile("(\\+|-)?\\d+");
+		INT_NB_PAT = Pattern.compile("((\\+|-)?[1-9]\\d*)|(0x\\p{XDigit}+)");
 	}
 
 	public ExpressionTree() {
@@ -494,7 +494,7 @@ public class ExpressionTree {
 						m = INT_NB_PAT.matcher(sub);
 						if (m.find() && m.start() == 0) {
 							String valstr = sub.substring(0, m.end());
-							Integer val = new Integer(valstr);
+							Integer val = Integer.decode(valstr);
 							if (DEBUG) {
 								System.out.println("[int]:" + val.intValue());
 							}
