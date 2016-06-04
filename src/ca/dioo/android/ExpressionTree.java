@@ -175,7 +175,7 @@ public class ExpressionTree {
 				throw new Error("Unimplemented operator: " + n.getType());
 			}
 		} else {
-			throw new Error("?!?");
+			throw new Error("?!?:" + t);
 		}
 	}
 
@@ -378,7 +378,7 @@ public class ExpressionTree {
 					&& tok instanceof Node) {
 				nextTok = it.next();
 				Node n = (Node) tok;
-				if (nextTok instanceof Value) {
+				if (nextTok instanceof Value || nextTok instanceof PrivNode) {
 					switch (n.getType()) {
 					case SUB:
 						Value v = (Value) nextTok;
@@ -395,6 +395,13 @@ public class ExpressionTree {
 						tok = nextTok;
 						al.add(tok);
 						break;
+					case MULT:
+						if (prevTok instanceof Node && ((Node) prevTok).getType() == NodeType.MULT) {
+							//Pass
+						} else {
+							throw new Error(n + " is not a unary operator");
+						}
+						break;
 					default:
 						throw new Error(n + " is not a unary operator");
 					}
@@ -403,7 +410,9 @@ public class ExpressionTree {
 			} else if (tok instanceof Node && ((Node) tok).getType() == NodeType.MULT) {
 				nextTok = it.next();
 				if (nextTok instanceof Node && ((Node) nextTok).getType() == NodeType.MULT) {
-					al.add(new Node(NodeType.POW));
+					tok = new Node(NodeType.POW);
+					nextTok = null;
+					al.add(tok);
 				} else {
 					al.add(tok);
 				}
