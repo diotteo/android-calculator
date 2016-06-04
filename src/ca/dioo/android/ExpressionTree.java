@@ -374,7 +374,14 @@ public class ExpressionTree {
 				nextTok = null;
 			}
 
-			if ((prevTok == null || prevTok instanceof Node)
+			if ((
+					prevTok == null || prevTok instanceof Node
+					||
+						(
+						prevTok instanceof PrivNode
+						&& ((PrivNode) prevTok).getType() == NodeType.LEFT_PAREN
+						)
+					)
 					&& tok instanceof Node) {
 				nextTok = it.next();
 				Node n = (Node) tok;
