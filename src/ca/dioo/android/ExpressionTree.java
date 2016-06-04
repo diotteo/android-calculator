@@ -425,7 +425,7 @@ public class ExpressionTree {
 			String cpstr = new String(Character.toChars(cp));
 
 			if (tokStart == i) {
-				if ("+-*/%".indexOf(cp) > -1) {
+				if ("+-*×/÷%".indexOf(cp) > -1) {
 					NodeType type = null;
 					if (DEBUG) {
 						System.out.println("[operator]:" + cpstr);
@@ -440,9 +440,11 @@ public class ExpressionTree {
 						type = NodeType.SUB;
 						break;
 					case '*':
+					case '×':
 						type = NodeType.MULT;
 						break;
 					case '/':
+					case '÷':
 						type = NodeType.DIV;
 						break;
 					case '%':
