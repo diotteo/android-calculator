@@ -97,14 +97,16 @@ public class ExpressionTree {
 			} else if (tok instanceof PrivNode) {
 				PrivNode pn = (PrivNode) tok;
 				if (DEBUG) {
-					System.out.println("PrivNode:" + pn.getType());
+					System.out.println("PrivNode:" + pn);
 				}
 
 				if (pn.getType() == NodeType.LEFT_PAREN) {
 					Token child;
 					if (tree.mCurNode instanceof Node) {
 						child = ((Node) tree.mCurNode).getRight();
+						boolean isNegative = pn.isNegative();
 						pn = new PrivNode(null, pn.getType(), child);
+						pn.setNegative(isNegative);
 						((Node) tree.mCurNode).setRight(pn);
 					} else {
 						child = ((PrivNode) tree.mCurNode).getChild();
@@ -153,10 +155,24 @@ public class ExpressionTree {
 		if (t instanceof Value) {
 			return ((Value) t).getVal();
 		} else if (t instanceof PrivNode) {
-			return _getResult(((PrivNode) t).getChild());
+			PrivNode pn = (PrivNode) t;
+			Number num = _getResult(pn.getChild());
+			if (pn.isNegative()) {
+				if (hasFloat(num, null)) {
+					num = new Double(-num.doubleValue());
+				} else {
+					num = new Long(-num.longValue());
+				}
+			}
+			return num;
 		} else if (t instanceof Node) {
 			Node n = (Node) t;
 			Number left = _getResult(n.getLeft());
+
+			//Handle special case where expression is just a number
+			if (n == mRootNode && n.getRight() == null && n.getType() == null) {
+				return left;
+			}
 			Number right = _getResult(n.getRight());
 			switch (n.getType()) {
 			case ADD:
@@ -350,7 +366,7 @@ public class ExpressionTree {
 				valList.add(n.getType().toString());
 				return n.getLeft() != null || n.getRight() != null;
 			} else {
-				valList.add(((PrivNode) t).getType().toString());
+				valList.add(((PrivNode) t).toString());
 				return ((PrivNode) t).getChild() != null;
 			}
 		}
@@ -385,7 +401,37 @@ public class ExpressionTree {
 					&& tok instanceof Node) {
 				nextTok = it.next();
 				Node n = (Node) tok;
-				if (nextTok instanceof Value || nextTok instanceof PrivNode) {
+
+				if (nextTok instanceof Node) {
+					Node nxt = (Node) nextTok;
+					if ((nxt.getType() == NodeType.SUB || nxt.getType() == NodeType.ADD)
+							&& (n.getType() == NodeType.SUB || n.getType() == NodeType.ADD)) {
+						if (n.getType() == NodeType.ADD && nxt.getType() == NodeType.ADD) {
+							tok = prevTok;
+							nextTok = new Node(NodeType.ADD);
+						} else if (n.getType() == NodeType.SUB && nxt.getType() == NodeType.SUB) {
+							tok = prevTok;
+							nextTok = new Node(NodeType.ADD);
+						} else {
+							tok = prevTok;
+							nextTok = new Node(NodeType.SUB);
+						}
+					} else {
+						throw new Error("one of " + n + " or " + nxt + " is not a unary operator");
+					}
+				} else if (nextTok instanceof PrivNode) {
+					switch (n.getType()) {
+					case ADD:
+						tok = prevTok;
+						break;
+					case SUB:
+						((PrivNode) nextTok).setNegative(true);
+						tok = prevTok;
+						break;
+					default:
+						throw new Error(n + " is not a unary operator");
+					}
+				} else if (nextTok instanceof Value) {
 					switch (n.getType()) {
 					case SUB:
 						Value v = (Value) nextTok;
@@ -582,7 +628,8 @@ public class ExpressionTree {
 	protected static class PrivNode extends NodeBase {
 		Token mChild;
 		NodeType mType;
-		boolean closed;
+		boolean mClosed;
+		boolean mNegative;
 
 		PrivNode(NodeType type) {
 			this(null, type, null);
@@ -592,7 +639,8 @@ public class ExpressionTree {
 			super(parent);
 			setType(type);
 			setChild(child);
-			closed = false;
+			mClosed = false;
+			mNegative = false;
 		}
 
 		@Override
@@ -605,11 +653,19 @@ public class ExpressionTree {
 		}
 
 		public void close() {
-			closed = true;
+			mClosed = true;
 		}
 
 		public boolean isClosed() {
-			return closed;
+			return mClosed;
+		}
+
+		public void setNegative(boolean negative) {
+			mNegative = negative;
+		}
+
+		public boolean isNegative() {
+			return mNegative;
 		}
 
 		@Override
@@ -648,7 +704,7 @@ public class ExpressionTree {
 
 		@Override
 		public String toString() {
-			return mType.toString();
+			return (mNegative ? "-" : "") + mType.toString();
 		}
 	}
 
