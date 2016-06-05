@@ -10,10 +10,13 @@ import android.net.wifi.WifiManager;
 import android.content.Context;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.ScrollView;
 
 public class MainActivity extends Activity {
-	TextView mResultView;
-	EditText mInputView;
+	private ScrollView mResultScroll;
+	private TextView mResultView;
+	private EditText mInputView;
+	private boolean mEmptyResults;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -21,13 +24,26 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_activity);
 
+		mResultScroll = (ScrollView) findViewById(R.id.result_scroll);
 		mResultView = (TextView) findViewById(R.id.result_view);
 		mInputView = (EditText) findViewById(R.id.input_view);
+		mEmptyResults = true;
 	}
 
 
 	public void displayResult(View v) {
 		String expr = mInputView.getText().toString();
-		mResultView.append("\n" + expr + " = " + ExpressionTree.getResultFromExpr(expr));
+		mInputView.setText("");
+
+		String prefix = "\n";
+		if (mEmptyResults) {
+			mEmptyResults = false;
+			mResultView.setText("");
+			prefix = "";
+		}
+		mResultView.append(prefix + expr + " = " + ExpressionTree.getResultFromExpr(expr));
+		mResultScroll.fullScroll(ScrollView.FOCUS_DOWN);
+		//FIXME: Must request focus only after scrolling is done?
+		//mInputView.requestFocus();
 	}
 }
