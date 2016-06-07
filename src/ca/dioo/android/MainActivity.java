@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
 			result = ExpressionTree.getResultFromExpr(expr);
 
 			if (result == null) {
-				Toast.makeText(this, "Invalid expression", Toast.LENGTH_SHORT);
+				Toast.makeText(this, "Invalid expression", Toast.LENGTH_SHORT).show();
 				return;
 			}
 			mInputView.setText("");
@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
 			//FIXME: Must request focus only after scrolling is done?
 			//mInputView.requestFocus();
 		} catch (MalformedExpressionException e) {
-			Toast.makeText(this, "Invalid expression: " + e.getMessage(), Toast.LENGTH_SHORT);
+			Toast.makeText(this, "Invalid expression: " + e.getMessage(), Toast.LENGTH_SHORT).show();
 		}
 	}
 }
