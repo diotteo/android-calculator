@@ -11,6 +11,7 @@ import android.content.Context;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	private ScrollView mResultScroll;
@@ -33,6 +34,12 @@ public class MainActivity extends Activity {
 
 	public void displayResult(View v) {
 		String expr = mInputView.getText().toString();
+		Number result = ExpressionTree.getResultFromExpr(expr);
+
+		if (result == null) {
+			Toast.makeText(this, "Invalid expression", Toast.LENGTH_SHORT);
+			return;
+		}
 		mInputView.setText("");
 
 		String prefix = "\n";
@@ -41,7 +48,7 @@ public class MainActivity extends Activity {
 			mResultView.setText("");
 			prefix = "";
 		}
-		mResultView.append(prefix + expr + " = " + ExpressionTree.getResultFromExpr(expr));
+		mResultView.append(prefix + expr + " = " + result);
 		mResultScroll.fullScroll(ScrollView.FOCUS_DOWN);
 		//FIXME: Must request focus only after scrolling is done?
 		//mInputView.requestFocus();
