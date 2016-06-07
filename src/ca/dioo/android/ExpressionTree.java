@@ -22,7 +22,7 @@ public class ExpressionTree {
 	}
 
 	public ExpressionTree() {
-		mRootNode = new Node();
+		mRootNode = new BinaryNode();
 		mCurNode = mRootNode;
 	}
 
@@ -44,29 +44,29 @@ public class ExpressionTree {
 					System.out.println("Value:" + ((Value) tok).getVal());
 				}
 				tree.mCurNode.setValue((Value) tok);
-			} else if (tok instanceof Node) {
-				Node n = (Node) tok;
+			} else if (tok instanceof BinaryNode) {
+				BinaryNode n = (BinaryNode) tok;
 				if (DEBUG) {
-					System.out.println("Node:" + n.getType());
+					System.out.println("BinaryNode:" + n.getType());
 				}
-				if (tree.mCurNode instanceof PrivNode) {
-					if (!((PrivNode) tree.mCurNode).isClosed()) {
-						PrivNode pn = (PrivNode) tree.mCurNode;
-						Token child = ((PrivNode) tree.mCurNode).getChild();
-						tree.mCurNode = new Node(tree.mCurNode, child, null, null);
+				if (tree.mCurNode instanceof UnaryNode) {
+					UnaryNode pn = (UnaryNode) tree.mCurNode;
+					if (!pn.isClosed()) {
+						Token child = pn.getChild();
+						tree.mCurNode = new BinaryNode(tree.mCurNode, child, null, null);
 						pn.setChild(tree.mCurNode);
 					}
 				}
 
 				if (tree.mCurNode.getType() == null) {
 					tree.mCurNode.setType(n.getType());
-				} else if (tree.mCurNode instanceof Node && ((Node) tree.mCurNode).getRight() == null) {
+				} else if (tree.mCurNode instanceof BinaryNode && ((BinaryNode) tree.mCurNode).getRight() == null) {
 					throw new Error("Two consecutive Nodes in token list?");
 
 				//n has higher priority to curNode. Insert above right leaf
 				} else if (NodeBase.compare(tree.mCurNode.getType(), n.getType()) > 0) {
-					n = new Node(n.getType());
-					((Node) tree.mCurNode).insertRight(n);
+					n = new BinaryNode(n.getType());
+					((BinaryNode) tree.mCurNode).insertRight(n);
 					tree.mCurNode = n;
 
 				//n has equal or lower priority to curNode. Insert as parent
@@ -80,7 +80,7 @@ public class ExpressionTree {
 						nb = nb.getParent();
 					}
 					NodeBase parent = nb;
-					n = new Node(n.getType());
+					n = new BinaryNode(n.getType());
 					NodeBase child = tree.mCurNode;
 					n.setLeft(child);
 					n.setParent(parent);
@@ -88,25 +88,25 @@ public class ExpressionTree {
 
 					if (parent == null) {
 						tree.mRootNode = tree.mCurNode;
-					} else if (parent instanceof PrivNode) {
-						((PrivNode) parent).setChild(tree.mCurNode);
+					} else if (parent instanceof UnaryNode) {
+						((UnaryNode) parent).setChild(tree.mCurNode);
 					} else {
-						((Node) parent).setRight(tree.mCurNode);
+						((BinaryNode) parent).setRight(tree.mCurNode);
 					}
 				}
-			} else if (tok instanceof PrivNode) {
-				PrivNode pn = (PrivNode) tok;
+			} else if (tok instanceof UnaryNode) {
+				UnaryNode pn = (UnaryNode) tok;
 				if (DEBUG) {
-					System.out.println("PrivNode:" + pn);
+					System.out.println("UnaryNode:" + pn);
 				}
 
 				if (pn.getType() == NodeType.LEFT_PAREN) {
 					Token child;
-					if (tree.mCurNode instanceof Node) {
-						Node n = (Node) tree.mCurNode;
+					if (tree.mCurNode instanceof BinaryNode) {
+						BinaryNode n = (BinaryNode) tree.mCurNode;
 						child = n.getRight();
 						boolean isNegative = pn.isNegative();
-						pn = new PrivNode(null, pn.getType(), child);
+						pn = new UnaryNode(null, pn.getType(), child);
 						pn.setNegative(isNegative);
 
 						if (n.getType() == null) {
@@ -120,20 +120,20 @@ public class ExpressionTree {
 							n.setRight(pn);
 						}
 					} else {
-						child = ((PrivNode) tree.mCurNode).getChild();
-						pn = new PrivNode(null, pn.getType(), child);
-						((PrivNode) tree.mCurNode).setChild(pn);
+						child = ((UnaryNode) tree.mCurNode).getChild();
+						pn = new UnaryNode(null, pn.getType(), child);
+						((UnaryNode) tree.mCurNode).setChild(pn);
 					}
 					tree.mCurNode = pn;
 
 				} else if (pn.getType() == NodeType.RIGHT_PAREN) {
-					if (tree.mCurNode instanceof Node && ((Node) tree.mCurNode).getRight() == null) {
+					if (tree.mCurNode instanceof BinaryNode && ((BinaryNode) tree.mCurNode).getRight() == null) {
 						if (tree.mCurNode.getType() != null) {
 							throw new Error("Bogus closing parenthesis (follows value)");
-						} else if (tree.mCurNode.getParent() instanceof PrivNode) {
-							Node n = (Node) tree.mCurNode;
+						} else if (tree.mCurNode.getParent() instanceof UnaryNode) {
+							BinaryNode n = (BinaryNode) tree.mCurNode;
 							tree.mCurNode = n.getParent();
-							((PrivNode) n.getParent()).setChild(n.getLeft());
+							((UnaryNode) n.getParent()).setChild(n.getLeft());
 						} else {
 							throw new Error("?!?");
 						}
@@ -141,14 +141,14 @@ public class ExpressionTree {
 
 					NodeBase nb = tree.mCurNode;
 					boolean found = false;
-					while (!(nb instanceof PrivNode)) {
+					while (!(nb instanceof UnaryNode)) {
 						if (nb.getParent() == null) {
 							throw new Error("extraneous closing parenthesis");
 						} else {
 							nb = nb.getParent();
 						}
 					}
-					((PrivNode) nb).close();
+					((UnaryNode) nb).close();
 					tree.mCurNode = nb;
 				}
 			}
@@ -165,8 +165,8 @@ public class ExpressionTree {
 	private Number _getResult(Token t) {
 		if (t instanceof Value) {
 			return ((Value) t).getVal();
-		} else if (t instanceof PrivNode) {
-			PrivNode pn = (PrivNode) t;
+		} else if (t instanceof UnaryNode) {
+			UnaryNode pn = (UnaryNode) t;
 			Number num = _getResult(pn.getChild());
 			if (pn.isNegative()) {
 				if (hasFloat(num, null)) {
@@ -176,8 +176,8 @@ public class ExpressionTree {
 				}
 			}
 			return num;
-		} else if (t instanceof Node) {
-			Node n = (Node) t;
+		} else if (t instanceof BinaryNode) {
+			BinaryNode n = (BinaryNode) t;
 			Number left = _getResult(n.getLeft());
 
 			//Handle special case where expression is just a number
@@ -270,11 +270,11 @@ public class ExpressionTree {
 	private int _getDepth(Token tree, int depth) {
 		if (tree instanceof Value || tree == null) {
 			return depth+1;
-		} else if (tree instanceof PrivNode) {
-			PrivNode pn = (PrivNode) tree;
+		} else if (tree instanceof UnaryNode) {
+			UnaryNode pn = (UnaryNode) tree;
 			return _getDepth(pn.getChild(), depth + 1);
-		} else if (tree instanceof Node) {
-			Node n = (Node) tree;
+		} else if (tree instanceof BinaryNode) {
+			BinaryNode n = (BinaryNode) tree;
 			return Math.max(_getDepth(n.getLeft(), depth + 1), _getDepth(n.getRight(), depth + 1));
 		} else {
 			throw new Error("?!?");
@@ -289,13 +289,13 @@ public class ExpressionTree {
 
 	/*
 	private void printSubtree(Token t, int depth, int maxDepth, int nbSpaces) {
-		if (t instanceof Node) {
+		if (t instanceof BinaryNode) {
 			depth++;
-			printSubTree(((Node) t).getLeft(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
-			System.out.println(StringUtils.repeat("", " ", nbSpaces) + '/' + ((Node) t));
-			printSubTree(((Node) t).getRight(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
-		} else if (t instanceof PrivNode) {
-			t = ((PrivNode) t).getChild();
+			printSubTree(((BinaryNode) t).getLeft(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
+			System.out.println(StringUtils.repeat("", " ", nbSpaces) + '/' + ((BinaryNode) t));
+			printSubTree(((BinaryNode) t).getRight(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
+		} else if (t instanceof UnaryNode) {
+			t = ((UnaryNode) t).getChild();
 		} else {
 			System.out.println(StringUtils.repeat("", " ", depth
 		}
@@ -308,13 +308,13 @@ public class ExpressionTree {
 		ArrayList<String> al = new ArrayList<String>();
 		boolean isDeeper = true;
 		for (int i = 1; isDeeper; i++) {
-			if (n instanceof Node) {
+			if (n instanceof BinaryNode) {
 				boolean l, r;
-				l = getValueList(((Node) n).getLeft(), 1, i, al);
-				r = getValueList(((Node) n).getRight(), 1, i, al);
+				l = getValueList(((BinaryNode) n).getLeft(), 1, i, al);
+				r = getValueList(((BinaryNode) n).getRight(), 1, i, al);
 				isDeeper = l || r;
 			} else {
-				isDeeper = getValueList(((PrivNode) n).getChild(), 1, i, al);
+				isDeeper = getValueList(((UnaryNode) n).getChild(), 1, i, al);
 			}
 			System.out.println(StringUtils.join(", ", al));
 			al.clear();
@@ -326,27 +326,27 @@ public class ExpressionTree {
 			if (t == null || t instanceof Value) {
 				String s = "null";
 				valList.add(StringUtils.repeat(", ", s, (int) Math.pow(2, targetDepth - curDepth)));
-			} else if (t instanceof Node) {
+			} else if (t instanceof BinaryNode) {
 				boolean l, r;
 
-				l = getValueList(((Node) t).getLeft(), curDepth + 1, targetDepth, valList);
-				r = getValueList(((Node) t).getRight(), curDepth + 1, targetDepth, valList);
+				l = getValueList(((BinaryNode) t).getLeft(), curDepth + 1, targetDepth, valList);
+				r = getValueList(((BinaryNode) t).getRight(), curDepth + 1, targetDepth, valList);
 				return l || r;
 			} else {
-				return getValueList(((PrivNode) t).getChild(), curDepth + 1, targetDepth, valList);
+				return getValueList(((UnaryNode) t).getChild(), curDepth + 1, targetDepth, valList);
 			}
 		} else {
 			if (t == null) {
 				valList.add("null");
 			} else if (t instanceof Value) {
 				valList.add(((Value) t).toString());
-			} else if (t instanceof Node) {
-				Node n = (Node) t;
+			} else if (t instanceof BinaryNode) {
+				BinaryNode n = (BinaryNode) t;
 				valList.add(n.getType().toString());
 				return n.getLeft() != null || n.getRight() != null;
 			} else {
-				valList.add(((PrivNode) t).toString());
-				return ((PrivNode) t).getChild() != null;
+				valList.add(((UnaryNode) t).toString());
+				return ((UnaryNode) t).getChild() != null;
 			}
 		}
 		return false;
@@ -370,41 +370,41 @@ public class ExpressionTree {
 			}
 
 			if ((
-					prevTok == null || prevTok instanceof Node
+					prevTok == null || prevTok instanceof BinaryNode
 					||
 						(
-						prevTok instanceof PrivNode
-						&& ((PrivNode) prevTok).getType() == NodeType.LEFT_PAREN
+						prevTok instanceof UnaryNode
+						&& ((UnaryNode) prevTok).getType() == NodeType.LEFT_PAREN
 						)
 					)
-					&& tok instanceof Node) {
+					&& tok instanceof BinaryNode) {
 				nextTok = it.next();
-				Node n = (Node) tok;
+				BinaryNode n = (BinaryNode) tok;
 
-				if (nextTok instanceof Node) {
-					Node nxt = (Node) nextTok;
+				if (nextTok instanceof BinaryNode) {
+					BinaryNode nxt = (BinaryNode) nextTok;
 					if ((nxt.getType() == NodeType.SUB || nxt.getType() == NodeType.ADD)
 							&& (n.getType() == NodeType.SUB || n.getType() == NodeType.ADD)) {
 						if (n.getType() == NodeType.ADD && nxt.getType() == NodeType.ADD) {
 							tok = prevTok;
-							nextTok = new Node(NodeType.ADD);
+							nextTok = new BinaryNode(NodeType.ADD);
 						} else if (n.getType() == NodeType.SUB && nxt.getType() == NodeType.SUB) {
 							tok = prevTok;
-							nextTok = new Node(NodeType.ADD);
+							nextTok = new BinaryNode(NodeType.ADD);
 						} else {
 							tok = prevTok;
-							nextTok = new Node(NodeType.SUB);
+							nextTok = new BinaryNode(NodeType.SUB);
 						}
 					} else {
 						throw new Error("one of " + n + " or " + nxt + " is not a unary operator");
 					}
-				} else if (nextTok instanceof PrivNode) {
+				} else if (nextTok instanceof UnaryNode) {
 					switch (n.getType()) {
 					case ADD:
 						tok = prevTok;
 						break;
 					case SUB:
-						((PrivNode) nextTok).setNegative(true);
+						((UnaryNode) nextTok).setNegative(true);
 						tok = prevTok;
 						break;
 					default:
@@ -428,7 +428,7 @@ public class ExpressionTree {
 						al.add(tok);
 						break;
 					case MULT:
-						if (prevTok instanceof Node && ((Node) prevTok).getType() == NodeType.MULT) {
+						if (prevTok instanceof BinaryNode && ((BinaryNode) prevTok).getType() == NodeType.MULT) {
 							//Pass
 						} else {
 							throw new Error(n + " is not a unary operator");
@@ -439,10 +439,10 @@ public class ExpressionTree {
 					}
 					nextTok = null;
 				}
-			} else if (tok instanceof Node && ((Node) tok).getType() == NodeType.MULT) {
+			} else if (tok instanceof BinaryNode && ((BinaryNode) tok).getType() == NodeType.MULT) {
 				nextTok = it.next();
-				if (nextTok instanceof Node && ((Node) nextTok).getType() == NodeType.MULT) {
-					tok = new Node(NodeType.POW);
+				if (nextTok instanceof BinaryNode && ((BinaryNode) nextTok).getType() == NodeType.MULT) {
+					tok = new BinaryNode(NodeType.POW);
 					nextTok = null;
 					al.add(tok);
 				} else {
@@ -495,12 +495,12 @@ public class ExpressionTree {
 						throw new Error("Unknown node type \"" + cpstr + "\"");
 					}
 
-					tokList.add(new Node(type));
+					tokList.add(new BinaryNode(type));
 				} else if (cp == '(') {
-					tokList.add(new PrivNode(NodeType.LEFT_PAREN));
+					tokList.add(new UnaryNode(NodeType.LEFT_PAREN));
 					tokStart = i + 1;
 				} else if (cp == ')') {
-					tokList.add(new PrivNode(NodeType.RIGHT_PAREN));
+					tokList.add(new UnaryNode(NodeType.RIGHT_PAREN));
 					tokStart = i + 1;
 				} else {
 					String sub = expr.substring(tokStart);
@@ -606,17 +606,17 @@ public class ExpressionTree {
 	}
 
 
-	protected static class PrivNode extends NodeBase {
+	public static class UnaryNode extends NodeBase {
 		Token mChild;
 		NodeType mType;
 		boolean mClosed;
 		boolean mNegative;
 
-		PrivNode(NodeType type) {
+		UnaryNode(NodeType type) {
 			this(null, type, null);
 		}
 
-		PrivNode(NodeBase parent, NodeType type, Token child) {
+		UnaryNode(NodeBase parent, NodeType type, Token child) {
 			super(parent);
 			setType(type);
 			setChild(child);
@@ -629,7 +629,7 @@ public class ExpressionTree {
 			if (type == NodeType.LEFT_PAREN || type == NodeType.RIGHT_PAREN) {
 				mType = type;
 			} else {
-				throw new Error("disallowed PrivNode type:" + type);
+				throw new Error("disallowed UnaryNode type:" + type);
 			}
 		}
 
@@ -671,7 +671,7 @@ public class ExpressionTree {
 			setChild(t);
 			if (child != null) {
 				if (!(t instanceof NodeBase)) {
-					throw new Error("can't insert non-Node above non-null child");
+					throw new Error("can't insert non-BinaryNode above non-null child");
 				} else {
 					((NodeBase) t).insert(child);
 				}
@@ -689,20 +689,20 @@ public class ExpressionTree {
 		}
 	}
 
-	public static class Node extends NodeBase {
+	public static class BinaryNode extends NodeBase {
 		Token mLeftLeaf;
 		Token mRightLeaf;
 		NodeType mType;
 
-		public Node() {
+		public BinaryNode() {
 			this(null, null, null, null);
 		}
 
-		public Node(NodeType type) {
+		public BinaryNode(NodeType type) {
 			this(null, null, null, type);
 		}
 
-		public Node(NodeBase parent, Token left, Token right, NodeType type) {
+		public BinaryNode(NodeBase parent, Token left, Token right, NodeType type) {
 			super(parent);
 			setLeft(left);
 			setRight(right);
@@ -735,7 +735,7 @@ public class ExpressionTree {
 		@Override
 		public void setType(NodeType type) {
 			if (type == NodeType.LEFT_PAREN || type == NodeType.RIGHT_PAREN) {
-				throw new Error("disallowed PrivNode type:" + type);
+				throw new Error("disallowed UnaryNode type:" + type);
 			} else {
 				mType = type;
 			}
@@ -753,10 +753,10 @@ public class ExpressionTree {
 			} else {
 				setLeft(t);
 				if (child != null) {
-					if (t instanceof PrivNode) {
-						((PrivNode) t).setChild(child);
-					} else if (t instanceof Node) {
-						((Node) t).setLeft(child);
+					if (t instanceof UnaryNode) {
+						((UnaryNode) t).setChild(child);
+					} else if (t instanceof BinaryNode) {
+						((BinaryNode) t).setLeft(child);
 					} else {
 						throw new Error("?!?");
 					}
@@ -765,10 +765,10 @@ public class ExpressionTree {
 		}
 
 		public void insertRight(Token t) {
-			if (t instanceof Node) {
-				((Node) t).setLeft(mRightLeaf);
+			if (t instanceof BinaryNode) {
+				((BinaryNode) t).setLeft(mRightLeaf);
 			} else {
-				((PrivNode) t).setChild(mRightLeaf);
+				((UnaryNode) t).setChild(mRightLeaf);
 			}
 			setRight(t);
 		}
@@ -787,7 +787,7 @@ public class ExpressionTree {
 				setRight(v);
 			} else {
 				//FIXME: Exception type
-				throw new Error("Node is filled, should not happen for a Value");
+				throw new Error("BinaryNode is filled, should not happen for a Value");
 			}
 		}
 
@@ -805,7 +805,7 @@ public class ExpressionTree {
 			this(null, value);
 		}
 
-		public Value(Node parent, Number value) {
+		public Value(BinaryNode parent, Number value) {
 			super(parent);
 
 			mVal = value;
