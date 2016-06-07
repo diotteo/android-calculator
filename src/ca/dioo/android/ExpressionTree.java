@@ -270,7 +270,7 @@ public class ExpressionTree {
 	private int _getDepth(Token tree, int depth) {
 		if (tree instanceof Value || tree == null) {
 			return depth+1;
-		} else if (tree instanceof PrivNode) { 
+		} else if (tree instanceof PrivNode) {
 			PrivNode pn = (PrivNode) tree;
 			return _getDepth(pn.getChild(), depth + 1);
 		} else if (tree instanceof Node) {
@@ -292,12 +292,12 @@ public class ExpressionTree {
 		if (t instanceof Node) {
 			depth++;
 			printSubTree(((Node) t).getLeft(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
-			System.out.println(repeat("", " ", nbSpaces) + '/' + ((Node) t));
+			System.out.println(StringUtils.repeat("", " ", nbSpaces) + '/' + ((Node) t));
 			printSubTree(((Node) t).getRight(), depth, maxDepth, nbSpaces + Math.pow(2, maxDepth - depth) + 1);
 		} else if (t instanceof PrivNode) {
 			t = ((PrivNode) t).getChild();
 		} else {
-			System.out.println(repeat("", " ", depth
+			System.out.println(StringUtils.repeat("", " ", depth
 		}
 	}
 	*/
@@ -316,48 +316,16 @@ public class ExpressionTree {
 			} else {
 				isDeeper = getValueList(((PrivNode) n).getChild(), 1, i, al);
 			}
-			System.out.println(join(", ", al));
+			System.out.println(StringUtils.join(", ", al));
 			al.clear();
 		}
-	}
-
-	private String join(String del, Iterable<String> iter) {
-		String out = "";
-
-		String sep = "";
-		for (String s: iter) {
-			out += sep + s;
-			sep = del;
-		}
-
-		return out;
-	}
-
-	private String repeat(String delim, String s, int n) {
-		String out = "";
-		int i = 0;
-
-		if (n > 0) {
-			out = s;
-			i = 1;
-
-			while (i * 2 < n) {
-				i *= 2;
-				out += delim + out;
-			}
-		}
-
-		for (; i < n; i++) {
-			out += delim + s;
-		}
-		return out;
 	}
 
 	private boolean getValueList(Token t, int curDepth, int targetDepth, List<String> valList) {
 		if (curDepth < targetDepth) {
 			if (t == null || t instanceof Value) {
 				String s = "null";
-				valList.add(repeat(", ", s, (int) Math.pow(2, targetDepth - curDepth)));
+				valList.add(StringUtils.repeat(", ", s, (int) Math.pow(2, targetDepth - curDepth)));
 			} else if (t instanceof Node) {
 				boolean l, r;
 
