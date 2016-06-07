@@ -163,12 +163,16 @@ public class ExpressionTree {
 
 
 	private Number _getResult(Token t) {
-		if (t instanceof Value) {
+		if (t == null) {
+			return null;
+		} else if (t instanceof Value) {
 			return ((Value) t).getVal();
 		} else if (t instanceof UnaryNode) {
 			UnaryNode pn = (UnaryNode) t;
 			Number num = _getResult(pn.getChild());
-			if (pn.isNegative()) {
+			if (num == null) {
+				return null;
+			} else if (pn.isNegative()) {
 				if (hasFloat(num, null)) {
 					num = new Double(-num.doubleValue());
 				} else {
@@ -179,12 +183,18 @@ public class ExpressionTree {
 		} else if (t instanceof BinaryNode) {
 			BinaryNode n = (BinaryNode) t;
 			Number left = _getResult(n.getLeft());
+			if (left == null) {
+				return null;
+			}
 
 			//Handle special case where expression is just a number
 			if (n == mRootNode && n.getRight() == null && n.getType() == null) {
 				return left;
 			}
 			Number right = _getResult(n.getRight());
+			if (right == null) {
+				return null;
+			}
 			switch (n.getType()) {
 			case ADD:
 				return add(left, right);
