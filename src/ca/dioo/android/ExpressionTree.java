@@ -21,13 +21,13 @@ public class ExpressionTree {
 		INT_NB_PAT = Pattern.compile("((\\+|-)?[1-9]\\d*)|(0x\\p{XDigit}+)");
 	}
 
-	public ExpressionTree() {
+	public ExpressionTree() throws MalformedExpressionException {
 		mRootNode = new BinaryNode();
 		mCurNode = mRootNode;
 	}
 
 
-	public static Number getResultFromExpr(String expr) {
+	public static Number getResultFromExpr(String expr) throws MalformedExpressionException {
 		List<Token> tokList = parse(expr);
 		tokList = compressList(tokList);
 		ExpressionTree tree = buildTree(tokList);
@@ -35,7 +35,7 @@ public class ExpressionTree {
 	}
 
 
-	public static ExpressionTree buildTree(List<Token> tokList) {
+	public static ExpressionTree buildTree(List<Token> tokList) throws MalformedExpressionException {
 		ExpressionTree tree = new ExpressionTree();
 
 		for (Token tok: tokList) {
@@ -61,7 +61,7 @@ public class ExpressionTree {
 				if (tree.mCurNode.getType() == null) {
 					tree.mCurNode.setType(n.getType());
 				} else if (tree.mCurNode instanceof BinaryNode && ((BinaryNode) tree.mCurNode).getRight() == null) {
-					throw new Error("Two consecutive Nodes in token list?");
+					throw new MalformedExpressionException("Two consecutive Nodes in token list?");
 
 				//n has higher priority to curNode. Insert above right leaf
 				} else if (NodeBase.compare(tree.mCurNode.getType(), n.getType()) > 0) {
@@ -113,7 +113,7 @@ public class ExpressionTree {
 							if (n.getParent() == null) {
 								tree.mRootNode = pn;
 							} else {
-								throw new Error("?!?");
+								throw new MalformedExpressionException("?!?");
 							}
 							pn.setParent(n.getParent());
 						} else {
@@ -129,13 +129,13 @@ public class ExpressionTree {
 				} else if (pn.getType() == NodeType.RIGHT_PAREN) {
 					if (tree.mCurNode instanceof BinaryNode && ((BinaryNode) tree.mCurNode).getRight() == null) {
 						if (tree.mCurNode.getType() != null) {
-							throw new Error("Bogus closing parenthesis (follows operator)");
+							throw new MalformedExpressionException("Bogus closing parenthesis (follows operator)");
 						} else if (tree.mCurNode.getParent() instanceof UnaryNode) {
 							BinaryNode n = (BinaryNode) tree.mCurNode;
 							tree.mCurNode = n.getParent();
 							((UnaryNode) n.getParent()).setChild(n.getLeft());
 						} else {
-							throw new Error("?!?");
+							throw new MalformedExpressionException("?!?");
 						}
 					}
 
@@ -143,7 +143,7 @@ public class ExpressionTree {
 					boolean found = false;
 					while (!(nb instanceof UnaryNode)) {
 						if (nb.getParent() == null) {
-							throw new Error("extraneous closing parenthesis");
+							throw new MalformedExpressionException("extraneous closing parenthesis");
 						} else {
 							nb = nb.getParent();
 						}
@@ -157,12 +157,12 @@ public class ExpressionTree {
 	}
 
 
-	public Number getResult() {
+	public Number getResult() throws MalformedExpressionException {
 		return _getResult(mRootNode);
 	}
 
 
-	private Number _getResult(Token t) {
+	private Number _getResult(Token t) throws MalformedExpressionException {
 		if (t == null) {
 			return null;
 		} else if (t instanceof Value) {
@@ -209,10 +209,10 @@ public class ExpressionTree {
 			case POW:
 				return pow(left, right);
 			default:
-				throw new Error("Unimplemented operator: " + n.getType());
+				throw new MalformedExpressionException("Unimplemented operator: " + n.getType());
 			}
 		} else {
-			throw new Error("?!?:" + t);
+			throw new MalformedExpressionException("?!?:" + t);
 		}
 	}
 
@@ -272,12 +272,12 @@ public class ExpressionTree {
 	}
 
 
-	public int getDepth() {
+	public int getDepth() throws MalformedExpressionException {
 		return _getDepth(mRootNode, 0);
 	}
 
 
-	private int _getDepth(Token tree, int depth) {
+	private int _getDepth(Token tree, int depth) throws MalformedExpressionException {
 		if (tree instanceof Value || tree == null) {
 			return depth+1;
 		} else if (tree instanceof UnaryNode) {
@@ -287,7 +287,7 @@ public class ExpressionTree {
 			BinaryNode n = (BinaryNode) tree;
 			return Math.max(_getDepth(n.getLeft(), depth + 1), _getDepth(n.getRight(), depth + 1));
 		} else {
-			throw new Error("?!?");
+			throw new MalformedExpressionException("?!?");
 		}
 	}
 
@@ -364,7 +364,7 @@ public class ExpressionTree {
 
 
 
-	public static List<Token> compressList(List<Token> tokList) {
+	public static List<Token> compressList(List<Token> tokList) throws MalformedExpressionException {
 		ArrayList<Token> al = new ArrayList<Token>();
 
 		Token prevTok = null;
@@ -374,7 +374,7 @@ public class ExpressionTree {
 			prevTok = tok;
 			if (nextTok == null) {
 				if (!it.hasNext()) {
-					throw new Error("Unterminated expression");
+					throw new MalformedExpressionException("Unterminated expression");
 				}
 				tok = it.next();
 			} else {
@@ -392,7 +392,7 @@ public class ExpressionTree {
 					)
 					&& tok instanceof BinaryNode) {
 				if (!it.hasNext()) {
-					throw new Error("Unterminated expression");
+					throw new MalformedExpressionException("Unterminated expression");
 				}
 				nextTok = it.next();
 				BinaryNode n = (BinaryNode) tok;
@@ -412,7 +412,7 @@ public class ExpressionTree {
 							nextTok = new BinaryNode(NodeType.SUB);
 						}
 					} else {
-						throw new Error("one of " + n + " or " + nxt + " is not a unary operator");
+						throw new MalformedExpressionException("one of " + n + " or " + nxt + " is not a unary operator");
 					}
 				} else if (nextTok instanceof UnaryNode) {
 					switch (n.getType()) {
@@ -424,7 +424,7 @@ public class ExpressionTree {
 						tok = prevTok;
 						break;
 					default:
-						throw new Error(n + " is not a unary operator");
+						throw new MalformedExpressionException(n + " is not a unary operator");
 					}
 				} else if (nextTok instanceof Value) {
 					switch (n.getType()) {
@@ -435,7 +435,7 @@ public class ExpressionTree {
 						} else if (v.getVal() instanceof Float) {
 							tok = new Value(new Float(-v.getVal().floatValue()));
 						} else {
-							throw new Error("Unknown value type:" + v.getVal().getClass().getName());
+							throw new MalformedExpressionException("Unknown value type:" + v.getVal().getClass().getName());
 						}
 						al.add(tok);
 						break;
@@ -447,17 +447,17 @@ public class ExpressionTree {
 						if (prevTok instanceof BinaryNode && ((BinaryNode) prevTok).getType() == NodeType.MULT) {
 							//Pass
 						} else {
-							throw new Error(n + " is not a unary operator");
+							throw new MalformedExpressionException(n + " is not a unary operator");
 						}
 						break;
 					default:
-						throw new Error(n + " is not a unary operator");
+						throw new MalformedExpressionException(n + " is not a unary operator");
 					}
 					nextTok = null;
 				}
 			} else if (tok instanceof BinaryNode && ((BinaryNode) tok).getType() == NodeType.MULT) {
 				if (!it.hasNext()) {
-					throw new Error("Unterminated expression");
+					throw new MalformedExpressionException("Unterminated expression");
 				}
 				nextTok = it.next();
 				if (nextTok instanceof BinaryNode && ((BinaryNode) nextTok).getType() == NodeType.MULT) {
@@ -476,7 +476,7 @@ public class ExpressionTree {
 	}
 
 
-	public static List<Token> parse(String expr) {
+	public static List<Token> parse(String expr) throws MalformedExpressionException {
 		int tokStart = 0;
 		List<Token> tokList = new ArrayList<Token>();
 
@@ -511,7 +511,7 @@ public class ExpressionTree {
 						type = NodeType.MOD;
 						break;
 					default:
-						throw new Error("Unknown node type \"" + cpstr + "\"");
+						throw new MalformedExpressionException("Unknown node type \"" + cpstr + "\"");
 					}
 
 					tokList.add(new BinaryNode(type));
@@ -549,7 +549,7 @@ public class ExpressionTree {
 						} else if (Character.isWhitespace(cp)) {
 							tokStart = i + 1;
 						} else {
-							throw new Error("Unknown token at index " + tokStart + ": " + sub);
+							throw new MalformedExpressionException("Unknown token at index " + tokStart + ": " + sub);
 						}
 					}
 				}
@@ -596,15 +596,15 @@ public class ExpressionTree {
 		}
 
 		public abstract NodeType getType();
-		public abstract void setType(NodeType type);
-		public abstract void setValue(Value v);
-		public abstract void insert(Token t);
+		public abstract void setType(NodeType type) throws MalformedExpressionException;
+		public abstract void setValue(Value v) throws MalformedExpressionException;
+		public abstract void insert(Token t) throws MalformedExpressionException;
 
-		public static int compare(NodeType t1, NodeType t2) {
+		public static int compare(NodeType t1, NodeType t2) throws MalformedExpressionException {
 			return getPriority(t1) - getPriority(t2);
 		}
 
-		private static int getPriority(NodeType type) {
+		private static int getPriority(NodeType type) throws MalformedExpressionException {
 			switch (type) {
 			case LEFT_PAREN:
 			case RIGHT_PAREN:
@@ -619,7 +619,7 @@ public class ExpressionTree {
 			case SUB:
 				return 3;
 			default:
-				throw new Error("Unknown type priority: " + type);
+				throw new MalformedExpressionException("Unknown type priority: " + type);
 			}
 		}
 	}
@@ -631,11 +631,11 @@ public class ExpressionTree {
 		private boolean mClosed;
 		private boolean mNegative;
 
-		UnaryNode(NodeType type) {
+		UnaryNode(NodeType type) throws MalformedExpressionException {
 			this(null, type, null);
 		}
 
-		UnaryNode(NodeBase parent, NodeType type, Token child) {
+		UnaryNode(NodeBase parent, NodeType type, Token child) throws MalformedExpressionException {
 			super(parent);
 			setType(type);
 			setChild(child);
@@ -644,11 +644,11 @@ public class ExpressionTree {
 		}
 
 		@Override
-		public void setType(NodeType type) {
+		public void setType(NodeType type) throws MalformedExpressionException {
 			if (type == NodeType.LEFT_PAREN || type == NodeType.RIGHT_PAREN) {
 				mType = type;
 			} else {
-				throw new Error("disallowed UnaryNode type:" + type);
+				throw new MalformedExpressionException("disallowed UnaryNode type:" + type);
 			}
 		}
 
@@ -685,12 +685,12 @@ public class ExpressionTree {
 		}
 
 		@Override
-		public void insert(Token t) {
+		public void insert(Token t) throws MalformedExpressionException {
 			Token child = mChild;
 			setChild(t);
 			if (child != null) {
 				if (!(t instanceof NodeBase)) {
-					throw new Error("can't insert non-BinaryNode above non-null child");
+					throw new MalformedExpressionException("can't insert Value above non-null child");
 				} else {
 					((NodeBase) t).insert(child);
 				}
@@ -698,7 +698,7 @@ public class ExpressionTree {
 		}
 
 		@Override
-		public void setValue(Value v) {
+		public void setValue(Value v) throws MalformedExpressionException {
 			setChild(v);
 		}
 
@@ -713,15 +713,15 @@ public class ExpressionTree {
 		private Token mRightLeaf;
 		private NodeType mType;
 
-		public BinaryNode() {
+		public BinaryNode() throws MalformedExpressionException {
 			this(null, null, null, null);
 		}
 
-		public BinaryNode(NodeType type) {
+		public BinaryNode(NodeType type) throws MalformedExpressionException {
 			this(null, null, null, type);
 		}
 
-		public BinaryNode(NodeBase parent, Token left, Token right, NodeType type) {
+		public BinaryNode(NodeBase parent, Token left, Token right, NodeType type) throws MalformedExpressionException {
 			super(parent);
 			setLeft(left);
 			setRight(right);
@@ -752,9 +752,9 @@ public class ExpressionTree {
 		}
 
 		@Override
-		public void setType(NodeType type) {
+		public void setType(NodeType type) throws MalformedExpressionException {
 			if (type == NodeType.LEFT_PAREN || type == NodeType.RIGHT_PAREN) {
-				throw new Error("disallowed UnaryNode type:" + type);
+				throw new MalformedExpressionException("disallowed UnaryNode type:" + type);
 			} else {
 				mType = type;
 			}
@@ -765,10 +765,10 @@ public class ExpressionTree {
 			return mType;
 		}
 
-		public void insertLeft(Token t) {
+		public void insertLeft(Token t) throws MalformedExpressionException {
 			Token child = mLeftLeaf;
 			if (child != null && !(t instanceof NodeBase)) {
-				throw new Error("can't insert non-NodeBase as parent");
+				throw new MalformedExpressionException("can't insert non-NodeBase as parent");
 			} else {
 				setLeft(t);
 				if (child != null) {
@@ -777,7 +777,7 @@ public class ExpressionTree {
 					} else if (t instanceof BinaryNode) {
 						((BinaryNode) t).setLeft(child);
 					} else {
-						throw new Error("?!?");
+						throw new MalformedExpressionException("?!?");
 					}
 				}
 			}
@@ -794,19 +794,19 @@ public class ExpressionTree {
 
 
 		@Override
-		public void insert(Token t) {
+		public void insert(Token t) throws MalformedExpressionException {
 			insertLeft(t);
 		}
 
 		@Override
-		public void setValue(Value v) {
+		public void setValue(Value v) throws MalformedExpressionException {
 			if (mLeftLeaf == null) {
 				setLeft(v);
 			} else if (mRightLeaf == null) {
 				setRight(v);
 			} else {
 				//FIXME: Exception type
-				throw new Error("BinaryNode is filled, should not happen for a Value");
+				throw new MalformedExpressionException("BinaryNode is filled, should not happen for a Value");
 			}
 		}
 
@@ -841,7 +841,8 @@ public class ExpressionTree {
 			} else if (mVal instanceof Integer) {
 				return mVal.toString(); //intValue();
 			} else {
-				throw new Error("Unknown Value type: " + mVal.getClass().getName());
+				//throw new Error("Unknown Value type: " + mVal.getClass().getName());
+				return null;
 			}
 		}
 	}

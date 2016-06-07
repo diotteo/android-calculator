@@ -34,23 +34,28 @@ public class MainActivity extends Activity {
 
 	public void displayResult(View v) {
 		String expr = mInputView.getText().toString();
-		Number result = ExpressionTree.getResultFromExpr(expr);
+		Number result;
+		try {
+			result = ExpressionTree.getResultFromExpr(expr);
 
-		if (result == null) {
-			Toast.makeText(this, "Invalid expression", Toast.LENGTH_SHORT);
-			return;
-		}
-		mInputView.setText("");
+			if (result == null) {
+				Toast.makeText(this, "Invalid expression", Toast.LENGTH_SHORT);
+				return;
+			}
+			mInputView.setText("");
 
-		String prefix = "\n";
-		if (mEmptyResults) {
-			mEmptyResults = false;
-			mResultView.setText("");
-			prefix = "";
+			String prefix = "\n";
+			if (mEmptyResults) {
+				mEmptyResults = false;
+				mResultView.setText("");
+				prefix = "";
+			}
+			mResultView.append(prefix + expr + " = " + result);
+			mResultScroll.fullScroll(ScrollView.FOCUS_DOWN);
+			//FIXME: Must request focus only after scrolling is done?
+			//mInputView.requestFocus();
+		} catch (MalformedExpressionException e) {
+			Toast.makeText(this, "Invalid expression: " + e.getMessage(), Toast.LENGTH_SHORT);
 		}
-		mResultView.append(prefix + expr + " = " + result);
-		mResultScroll.fullScroll(ScrollView.FOCUS_DOWN);
-		//FIXME: Must request focus only after scrolling is done?
-		//mInputView.requestFocus();
 	}
 }
