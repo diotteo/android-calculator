@@ -129,7 +129,7 @@ public class ExpressionTree {
 				} else if (pn.getType() == NodeType.RIGHT_PAREN) {
 					if (tree.mCurNode instanceof BinaryNode && ((BinaryNode) tree.mCurNode).getRight() == null) {
 						if (tree.mCurNode.getType() != null) {
-							throw new Error("Bogus closing parenthesis (follows value)");
+							throw new Error("Bogus closing parenthesis (follows operator)");
 						} else if (tree.mCurNode.getParent() instanceof UnaryNode) {
 							BinaryNode n = (BinaryNode) tree.mCurNode;
 							tree.mCurNode = n.getParent();
