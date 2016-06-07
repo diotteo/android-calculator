@@ -542,7 +542,7 @@ public class ExpressionTree {
 
 
 	public static abstract class Token {
-		NodeBase mParent;
+		private NodeBase mParent;
 
 		public Token(NodeBase parent) {
 			setParent(parent);
@@ -607,10 +607,10 @@ public class ExpressionTree {
 
 
 	public static class UnaryNode extends NodeBase {
-		Token mChild;
-		NodeType mType;
-		boolean mClosed;
-		boolean mNegative;
+		private Token mChild;
+		private NodeType mType;
+		private boolean mClosed;
+		private boolean mNegative;
 
 		UnaryNode(NodeType type) {
 			this(null, type, null);
@@ -690,9 +690,9 @@ public class ExpressionTree {
 	}
 
 	public static class BinaryNode extends NodeBase {
-		Token mLeftLeaf;
-		Token mRightLeaf;
-		NodeType mType;
+		private Token mLeftLeaf;
+		private Token mRightLeaf;
+		private NodeType mType;
 
 		public BinaryNode() {
 			this(null, null, null, null);
@@ -799,7 +799,7 @@ public class ExpressionTree {
 
 
 	public static class Value extends Token {
-		Number mVal;
+		private Number mVal;
 
 		public Value(Number value) {
 			this(null, value);
