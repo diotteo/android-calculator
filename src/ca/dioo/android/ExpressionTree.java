@@ -373,6 +373,9 @@ public class ExpressionTree {
 		for (Iterator<Token> it = tokList.iterator(); it.hasNext() || nextTok != null; ) {
 			prevTok = tok;
 			if (nextTok == null) {
+				if (!it.hasNext()) {
+					throw new Error("Unterminated expression");
+				}
 				tok = it.next();
 			} else {
 				tok = nextTok;
@@ -388,6 +391,9 @@ public class ExpressionTree {
 						)
 					)
 					&& tok instanceof BinaryNode) {
+				if (!it.hasNext()) {
+					throw new Error("Unterminated expression");
+				}
 				nextTok = it.next();
 				BinaryNode n = (BinaryNode) tok;
 
@@ -450,6 +456,9 @@ public class ExpressionTree {
 					nextTok = null;
 				}
 			} else if (tok instanceof BinaryNode && ((BinaryNode) tok).getType() == NodeType.MULT) {
+				if (!it.hasNext()) {
+					throw new Error("Unterminated expression");
+				}
 				nextTok = it.next();
 				if (nextTok instanceof BinaryNode && ((BinaryNode) nextTok).getType() == NodeType.MULT) {
 					tok = new BinaryNode(NodeType.POW);
