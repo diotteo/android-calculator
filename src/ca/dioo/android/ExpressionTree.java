@@ -17,7 +17,7 @@ public class ExpressionTree {
 	private static Pattern INT_NB_PAT;
 
 	static {
-		FLOAT_NB_PAT = Pattern.compile("(\\+|-)?(\\d+\\.\\d*)|(\\d*\\.\\d+)((E|e)(\\+|-)?\\d+)?");
+		FLOAT_NB_PAT = Pattern.compile("(\\+|-)?((\\d+\\.\\d*)|(\\d*\\.\\d+)((E|e)(\\+|-)?\\d+)?|\\d+(E|e)(-)?\\d+)");
 		INT_NB_PAT = Pattern.compile("((\\+|-)?[1-9]\\d*)|(0x\\p{XDigit}+)");
 	}
 
