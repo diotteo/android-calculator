@@ -36,8 +36,8 @@ public class Test {
 					new TestExpr("0xff ** -(1.)", Math.pow(255, -1)),
 					new TestExpr("-2e-2+30", -2e-2+30),
 					new TestExpr("-20+30*(45.2+-.5E-2)-36", -20+30*(45.2+-.5E-2)-36),
-					new TestExpr("-20+30**(45.2+-.5E-2)-36", -20+Math.pow(30, (45.2+-.5E-2))-36)
-					);
+					new TestExpr("-20+30**(45.2+-.5E-2)-36", -20+Math.pow(30, (45.2+-.5E-2))-36),
+					new TestExpr("5.5*2.2e-2", 5.5*2.2e-2));
 		} else {
 			exprList = Arrays.asList();
 		}
