@@ -27,11 +27,15 @@ public class ExpressionTree {
 	}
 
 
-	public static Number getResultFromExpr(String expr) throws MalformedExpressionException {
+	public static ExpressionTree fromExpr(String expr) throws MalformedExpressionException {
 		List<Token> tokList = parse(expr);
 		tokList = compressList(tokList);
 		ExpressionTree tree = buildTree(tokList);
-		return tree.getResult();
+		return tree;
+	}
+
+	public static Number getResultFromExpr(String expr) throws MalformedExpressionException {
+		return fromExpr(expr).getResult();
 	}
 
 

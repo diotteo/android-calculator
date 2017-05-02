@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:gravity="center_vertical"
+		>
+	<ImageButton
+		android:id="@+id/copy_whole_btn"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@drawable/ic_content_copy_black_24dp"
+		/>
+	<LinearLayout
+			android:id="@+id/expr_layout"
+			android:orientation="horizontal"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			>
+		<TextView
+			android:id="@+id/expr_txt"
+			android:text="expression goes here"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textSize="32sp"
+			/>
+	</LinearLayout>
+	<TextView
+		android:text="="
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textSize="32sp"
+		/>
+	<TextView
+		android:id="@+id/result_txt"
+		android:text="result goes here"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textSize="32sp"
+		/>
+</LinearLayout>

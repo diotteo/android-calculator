@@ -11,10 +11,11 @@
 			android:layout_weight="1"
 			android:layout_marginLeft="15dp"
 			>
-		<TextView
+		<LinearLayout
 				android:id="@+id/result_view"
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent"
+				android:orientation="vertical"
 				android:text="Result goes here"
 				android:textIsSelectable="true"
 				android:textSize="32sp"
@@ -25,11 +26,27 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			/>
-	<Button
-			android:id="@+id/result_btn"
+	<LinearLayout
+			android:id="@+id/result_view"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:text="Get result"
-			android:onClick="displayResult"
-			/>
+			android:orientation="horizontal"
+			>
+		<Button
+				android:id="@+id/clear_btn"
+				android:layout_weight="0.5"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="Clear"
+				android:onClick="clearInput"
+				/>
+		<Button
+				android:id="@+id/result_btn"
+				android:layout_weight="0.5"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="Get result"
+				android:onClick="displayResult"
+				/>
+	</LinearLayout>
 </LinearLayout>
