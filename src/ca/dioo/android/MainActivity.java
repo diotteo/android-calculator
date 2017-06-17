@@ -185,7 +185,8 @@ public class MainActivity extends Activity {
 				public void onClick(View v) {
 					View parent = (View) v.getParent();
 					CharSequence expr_chrsq = ((TextView) parent.findViewById(R.id.expr_txt)).getText().toString();
-					mInputView.setText(expr_chrsq);
+					Editable e = mInputView.getText();
+					e.replace(mInputView.getSelectionStart(), mInputView.getSelectionEnd(), expr_chrsq);
 				}
 			});
 			TextView expr_txt = (TextView) expr_v.findViewById(R.id.expr_txt);
@@ -196,7 +197,8 @@ public class MainActivity extends Activity {
 				@Override
 				public void onClick(View v) {
 					CharSequence expr_chrsq = ((TextView) v).getText().toString();
-					mInputView.setText(expr_chrsq);
+					Editable e = mInputView.getText();
+					e.replace(mInputView.getSelectionStart(), mInputView.getSelectionEnd(), expr_chrsq);
 				}
 			});
 
